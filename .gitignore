@@ -1,0 +1,11 @@
+settings.local.yaml
+.env
+.env.local
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+data_catalog/
+logs/
+ws_payload_capture_*.json

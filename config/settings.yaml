@@ -1,0 +1,77 @@
+# =============================================================================
+# settings.yaml — central configuration for the opportunity engine
+# Copy this file to settings.local.yaml and fill in real credentials there.
+# NEVER commit settings.local.yaml — add it to .gitignore.
+# =============================================================================
+
+mode: "PAPER" # BACKTEST | PAPER | LIVE
+
+indstocks:
+  access_token: "${INDSTOCKS_ACCESS_TOKEN}" # set via env var, do not hardcode
+  rest_base_url: "https://api.indstocks.com"
+  ws_prices_url: "wss://ws-prices.indstocks.com/api/v1/ws/prices"
+  ws_orders_url: "wss://ws-order-updates.indstocks.com/api/v1/ws/trades"
+  reconnect_backoff_seconds: [1, 2, 5, 10, 30] # increasing backoff schedule
+  brokerage_per_order_inr: 5.0
+
+truedata:
+  username: "${TRUEDATA_USERNAME}"
+  password: "${TRUEDATA_PASSWORD}"
+  # TrueData's REST historical tick data defaults to a 5-trading-day retention
+  # window unless your account has an extended-history add-on. Plan captures
+  # accordingly — see src/data/vendors/truedata_loader.py.
+  tick_history_days_available: 5
+  rate_limit:
+    ticks_per_second: 5
+    ticks_per_minute: 300
+    ticks_per_hour: 18000
+
+catalog:
+  path: "./data_catalog" # ParquetDataCatalog root
+
+risk:
+  net_ev_threshold_bps: 15.0 # Arbiter only approves signals above this
+  max_concurrent_positions: 3
+  max_daily_loss_inr: 5000.0
+  max_position_size_units: 150
+
+costs:
+  stt_options_sell_pct: 0.125 # STT on options, on premium, sell side
+  nse_turnover_pct: 0.035
+  gst_pct: 18.0 # applied on (brokerage + turnover charges)
+  sebi_charges_pct: 0.0001
+  stamp_duty_pct: 0.003 # buy side only, varies by state
+
+market_depth:
+  initial_interval_seconds: 0.5   # starting poll interval (500ms)
+  floor_seconds: 0.2              # minimum interval never to go below (200ms)
+  max_backoff_seconds: 10.0       # maximum backoff cap (10s)
+  staleness_seconds: 10.0         # depth older than this is considered stale
+
+instruments:
+  watchlist:
+    - "NIFTY"
+    # - "SENSEX"  # TEMPORARILY DISABLED: real WS index token (BIDX:*) not yet
+    #             # confirmed — INDI00050:BSE:I (IndMoney internal app format)
+    #             # was tried and rejected by the public ws-prices.indstocks.com
+    #             # feed. Waiting on INDstocks support. Re-enable once
+    #             # ws_token_override for SENSEX-INDEX is set in instruments.json.
+  instrument_master_path: "./config/instruments.json"
+
+logging:
+  level: "INFO"
+  file: "./logs/engine.log"
+
+strategies:
+  obi_momentum:
+    enabled: true
+    quantity: 1
+  vwap_reversion:
+    enabled: true
+    quantity: 1
+  vol_breakout:
+    enabled: true
+    quantity: 1
+  orpc:
+    enabled: true
+    quantity: 1
